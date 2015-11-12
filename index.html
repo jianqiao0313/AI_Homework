@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>人工智能-图搜索算法对比研究</title>
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<link rel="stylesheet" href="bootstrap-theme.min.css">
+	<link rel="stylesheet" href="animate.min.css">
+	<script src="jquery-1.4.2.min.js"></script>
+	<style>
+		#btn1,#btn2,#btn3,#btn4,#btn5,#btn6,#btn7,#btn8,#btn9,#btn10,#btn11,#btn_renew{
+			width:180px;
+			padding-top: 3px;
+			padding-bottom: 3px;
+		}
+		#btn-map-1{
+			margin-right: 20px;
+		}
+	</style>
+</head>
+<script>
+		var btn_time = 1;
+		var open_time = 1;
+		var id_dep = 0;//迭代加深算法深度
+		var dfs_dep = 0;//深度受限算法深度
+		var point_num = 0;//点总数
+		var line_num = 0;//边总数
+		var tem = 0;
+		var begin_end_tem = 0; 
+		var draw_line_tem = 0;
+		var begin_point = 0;
+		var end_point = -1;
+		var point = new Array();
+		for(var i = 0 ;  i < 100 ; i++)
+		{
+			point[i] = new Array();
+			for(var j = 0 ; j < 2 ; j++)
+			{
+				point[i][j] = "";
+			}
+		}
+		var line = new Array();
+		for(var i = 0 ;  i < 100 ; i++)
+		{
+			line[i] = new Array();
+			for(var j = 0 ; j < 2 ; j++)
+			{
+				line[i][j] = "";
+			}
+		}
+		var edge = new Array();
+		var vis = new Array();
+		var dis_point = new Array();
+		for(var i = 0 ; i < 100 ; i++)
+		{
+			dis_point[i] = new Array();
+			for(var j = 0 ; j < 100 ; j++)
+			{
+				dis_point[i][j] = 9999999;
+			}
+		}
+        function $$(id){
+            return document.getElementById(id);
+        }
+        function pageLoad(a,b,c,d){
+            var can = $$('can');
+            var cans = can.getContext('2d');
+            cans.moveTo(a,b);//第一个起点
+            cans.lineTo(c,d);//第二个点
+            cans.lineWidth=3;
+            cans.strokeStyle = 'red';
+            cans.stroke();
+        }
+        function button_change(tem)
+        {
+        	setTimeout(function(){
+        			$("#middle button:eq("+tem+")").attr("class","btn-sm btn-success");
+        		},1000*btn_time++);
+        }
+        function open_table_change(tem,tem1,time)
+        {
+        	if(tem1 == 0)
+        	{
+	        	setTimeout(function(){
+		 			$("#open_table").append(tem+",");
+	        	},1000*time);
+        	}
+        	else if(tem1 == 1)
+        	{
+        		setTimeout(function(){
+		        	var str = $("#open_table").text();
+		        	var re = new RegExp(tem+",");
+        			$("#open_table").empty().append(str.replace(re,''));
+        			$("#close_table").append(tem+",");
+        		},1000*time);
+
+        	} 
+        }
+        function bfs()
+        {
+        	var stack = new Array();
+        	open_table_change(begin_point,0,open_time++);
+        	stack.push(begin_point);
+        	while(stack.length!=0)
+        	{
+        		var tem = stack.shift();
+        		if(tem!=end_point)
+        		{
+        			open_table_change(tem,1,open_time);
+        		}
+        		button_change(tem);
+        		vis[tem] = 1;
+        		if(tem == end_point)
+        		{
+        			alert("success");
+        			return true;
+        		}
+        		for(var i = 0 ; i < point_num ; i++)
+        		{
+        			if(edge[tem][i] == 1 && vis[i] == 0)
+        			{
+        				vis[i] = 1;
+        				open_table_change(i,0,open_time++);
+        				stack.push(i);
+        			}
+        		}
+        	}
+        	return false;
+        }
+        function ccsearch()//等代价
+        {
+        	var stack = new Array();
+        	open_table_change(begin_point,0,open_time++);
+        	stack.push(begin_point);
+        	while(stack.length!=0)
+        	{
+        		var tem = stack.shift();
+        		if(tem!=end_point)
+        		{
+        			open_table_change(tem,1,open_time);
+        		}
+        		button_change(tem);
+        		vis[tem] = 1;
+        		if(tem == end_point)
+        		{
+        			alert("success");
+        			return true;
+        		}
+        		for(var i = 0 ; i < point_num ; i++)
+        		{
+        			if(edge[tem][i] == 1 && vis[i] == 0)
+        			{
+        				vis[i] = 1;
+        				open_table_change(i,0,open_time++);
+        				stack.push(i);
+        			}
+        		}
+        	}
+        	return false;
+        }
+        function ideep(dep,a)
+        {
+        	if(dep == id_dep){
+        		return false;
+        	}
+        	vis[a] = 1;
+        	button_change(a);
+        	open_table_change(a,0,open_time++);
+        	if(a == end_point)
+        	{
+        		return true;
+        	}
+        	for(var i = 0 ; i < point_num ; i++)
+        	{
+        		if(edge[a][i] == 1 && vis[i] == 0)
+        		{
+        			if(ideep(dep+1,i))
+        			{
+        				return true;
+        			}
+        		}
+        	}
+ 			open_table_change(a,1,btn_time);
+        	return false;
+
+        }
+        function dfs(a)
+        {
+ 			vis[a] = 1;
+ 			button_change(a);
+ 			open_table_change(a,0,open_time++);
+ 			if(a==end_point)
+ 			{
+ 				alert("success");
+ 				return true;
+ 			}
+ 			for(var i = 0 ; i < point_num ; i++)
+ 			{
+ 				if(edge[a][i] == 1 && vis[i] == 0)
+ 				{
+ 					if(dfs(i))
+ 					{
+ 						return true;
+ 					}
+ 				}
+ 			} 
+ 			open_table_change(a,1,btn_time);
+ 			return false;
+        }
+       	function best()
+       	{
+       		var stack = new Array();
+        	stack.push(begin_point);
+        	open_table_change(begin_point,0,open_time++);
+    		var temi = 0;
+    		var	 sortarr = new Array();
+        	while(stack.length!=0)
+        	{
+        		var tem = stack.shift();
+        		sortarr = [];
+        		temi = 0;
+        		vis[tem] = 1;
+        		button_change(tem);
+        		if(tem == end_point)
+        		{
+        			alert("success");
+        			return true;
+        		}
+        		if(tem!=end_point)
+        		{
+        			open_table_change(tem,1,open_time);
+        		}
+        		for(var i = 0 ; i < point_num ; i++)
+        		{
+        			if(edge[tem][i] == 1 && vis[i] == 0)
+        			{
+        				vis[i] = 1;
+        				var temarr = new Array(dis_point[tem][i],i);
+   						temi++;
+        				sortarr.push(temarr);
+        			}
+        		}
+        		sortarr.sort(function(x,y){
+        			return x[0]-y[0];
+        		});
+        		for(var i = 0 ; i < temi ; i++)
+        		{
+        			open_table_change(sortarr[i][1],0,open_time++);
+        			stack.push(sortarr[i][1]);
+        		}
+        	}
+        	return false;
+       	} 
+        function renew()
+        {	
+        	for(var i = 0 ; i < point_num ; i++)
+			{
+				vis[i] = 0;
+			}
+			begin_end_tem = 0;
+			btn_time = 1;
+			open_time = 1;
+			$("#middle button").attr("class","btn-sm btn-default");
+			$("#open_table").empty();
+			$("#close_table").empty();
+        }
+    </script>
+</script>
+<body>
+	<div class="page-header">
+	  <h1> &nbsp;人工智能-图搜索算法对比研究<small>&nbsp;&nbsp;<span class="glyphicon glyphicon-user"></span> 2012061527 张蕾&nbsp;&nbsp;<span class="glyphicon glyphicon-user"></span> 20120616 王语轩&nbsp;&nbsp;<span class="glyphicon glyphicon-user"></span> 2012061612 吕健侨</small></h1>
+	</div>
+	<div id="main">
+		<div id="left" class="col-md-2">
+			<button id="btn1" class="btn btn-default"> 广 度 优 先</button>
+			<br>
+			<br>
+			<button id="btn2" class="btn btn-default">  等  代  价</button>
+			<br>
+			<br>
+			<button id="btn3" class="btn btn-default">深 度 优 先</button>
+			<br>
+			<br>
+			<button id="btn4" class="btn btn-default">深 度 受 限</button>
+			<br>
+			<br>
+			<button id="btn5" class="btn btn-default">迭 代 加 深</button>
+			<br>
+			<br>
+			<button id="btn6" class="btn btn-default">最佳优先搜索算法</button>
+			<br>
+			<br>
+			<!-- <button id="btn7" class="btn btn-default">单 步 执 行</button> -->
+			<button id="btn8" class="btn btn-default">开 始 画 点</button>
+			<br>
+			<br>
+			<button id="btn9" class="btn btn-default">开 始 画 边</button>
+			<br>
+			<br>
+			<button id="btn10" class="btn btn-default">起 点 终 点</button>
+			<br>
+			<br>
+			<button id="btn11" class="btn btn-default">结 束 画 图</button>
+			<br>
+			<br>
+			<button id="btn_renew" class="btn-lg btn-danger">图 像 初 始 化</button>
+		</div>
+		<div id="middle" class="col-md-4" style="background:#ccc;height:500px">
+			<canvas width="600px" height="500px" id="can">
+				
+			</canvas>
+		</div>
+		<div id="right" class="col-md-4 col-md-offset-1">
+			<div id="dfs_limit" style="background:#fff;width:250px;height:80px;">
+				<input id="dfs_limit_input" class="input" style="margin-left:15px;margin-top:30px;">
+				<button id=	"dfs_limit_button" class="btn-sm btn-info">确定</button>
+			</div>
+			<div class="panel panel-default">
+				  <div class="panel-heading">坐标:</div>
+				  <div class="panel-body" id="coordination"> &nbsp;</div>
+			</div>
+			<div class="panel panel-default">
+				  <div class="panel-heading">OPEN表:</div>
+				  <div class="panel-body" id="open_table"></div>
+			</div>
+			<div class="panel panel-default">
+				  <div class="panel-heading">CLOSE表:</div>
+				  <div class="panel-body" id="close_table"></div>
+			</div>
+		</div>
+		<div class="col-md-4 col-md-offset-1" style="margin-top:20px" id="code_div">
+			<pre id="dfs">
+	dfs(p){
+		vis[p] = 1;
+	        if(p == end_point)
+	        {
+	            alert("success");
+	            return true;
+	        }
+	        for(var i = 0 ; i < point_num ; i++)
+	        {
+	            if(edge[p][i] == 1 && vis[i] == 0)
+	            {
+	                if(dfs(i))
+	                {
+	                        return true;
+	                }
+	            }
+	        } 
+	        return false;
+	}
+            
+			</pre>
+			<pre id="bfs">
+	bfs(){
+	        var stack = new Array();
+		stack.push(begin_point);
+		while(stack.length!=0)
+		{
+		  var tem = stack.shift();
+		  vis[tem] = 1;
+		  if(tem == end_point)
+		  {
+		    alert("success");
+		    return true;
+	  	  }
+	  	  for(var i = 0 ; i < point_num ; i++)
+		  {
+	 	    if(edge[tem][i] == 1 && vis[i] == 0)
+		    {
+		      vis[i] = 1;
+		      stack.push(i);
+		    }
+		  }
+	      }
+	return false;
+	}		
+			</pre>
+			<pre id="ccsearch">
+var stack = new Array();
+stack.push(begin_point);
+while(stack.length!=0)
+{
+	var tem = stack.shift();
+	vis[tem] = 1;
+	if(tem == end_point)
+	{
+	  alert("success");
+	  return true;
+	}
+	for(var i = 0 ; i < point_num ; i++)
+	{
+	  if(edge[tem][i] == 1 && vis[i] == 0)
+	  {
+	    vis[i] = 1;
+	    stack.push(i);
+	  }
+	}
+}
+return false;
+				
+			</pre>
+			<pre id="dfslimit">
+function dfs_limit (dep,a){
+if(dep == id_dep){
+  return false;
+}
+vis[a] = 1;
+if(a == end_point)
+{
+  return true;
+}
+for(var i = 0 ; i < point_num ; i++)
+{
+  if(edge[a][i] == 1 && vis[i] == 0)
+  {
+    if(ideep(dep+1,i))
+    {
+      return true;
+    }
+  }
+}
+return false;
+}
+	
+			</pre>
+			<pre id="idfs">
+var flag = 0;
+for(var i = 0 ; i < 100 ; i++)
+{
+  id_dep ++;
+  if(dfs_limit(0,begin_point)){
+     flag = 1;
+     break;
+  }
+for(var i = 0 ; i < point_num ; i++)
+{
+   vis[i] = 0;
+}
+			</pre>
+			<pre id="fbest">
+var stack = new Array();
+stack.push(begin_point);
+var temi = 0;
+var	 sortarr = new Array();
+while(stack.length!=0)
+{
+var tem = stack.shift();
+sortarr = [];
+temi = 0;
+vis[tem] = 1;
+if(tem == end_point)
+{
+   alert("success");
+   return true;
+}
+for(var i = 0 ; i < point_num ; i++)
+{
+  if(edge[tem][i] == 1 && vis[i] == 0)
+  {
+    vis[i] = 1;
+    var temarr = new Array(dis_point[tem][i],i);
+    temi++;
+    sortarr.push(temarr);
+  }
+}
+sortarr.sort(function(x,y){
+	return x[0]-y[0];
+});
+for(var i = 0 ; i < temi ; i++)
+{
+	stack.push(sortarr[i][1]);
+}
+}
+return false;
+			</pre>
+		</div>
+	</div>
+
+
+
+
+</body>
+<script>
+	$().ready(function(){
+		$("pre").hide();
+		$("#dfs_limit").hide();
+		$("button").mouseenter(function(){
+			$(this).removeClass();
+			$(this).addClass("btn btn-info animated rubberBand");
+
+		});
+		$("button").mouseleave(function(){
+			$(this).removeClass();
+			$(this).addClass("btn btn-default");
+			$("#btn_renew").addClass("btn-lg btn-danger");
+		});
+	})
+	//bfs
+	$("#btn1").click(function(){
+		if(!bfs()){
+			alert("false");
+		};
+		$("pre").hide();
+		$("#bfs").show();
+	});
+	$("#btn2").click(function(){
+		if(!ccsearch())
+		{
+			alert("false");
+		}
+		$("pre").hide();
+		$("#ccsearch").show();
+	});
+	//dfs
+	$("#btn3").click(function(){
+		if(!dfs(begin_point))
+		{
+			alert("false");
+		}
+		$("pre").hide();
+		$("#dfs").show();
+
+	});
+	//深度受限
+	$("#btn4").click(function(){
+		$("#dfs_limit").show();
+		$("pre").hide();
+		$("#dfslimit").show();
+	});
+	$("#dfs_limit_button").click(function(){
+		$("#dfs_limit").hide();
+		id_dep = $("#dfs_limit_input").val();
+		if(ideep(0,begin_point)){
+			alert("success");
+		}
+		else
+		{
+			alert("false");
+		}
+	});
+	//id
+	$("#btn5").click(function(){
+		$("pre").hide();
+		$("#idfs").show();
+		if(end_point != -1)
+		{
+			var flag = 0;
+			for(var i = 0 ; i < 100 ; i++)
+			{
+				id_dep ++;
+				if(ideep(0,begin_point)){
+					alert("success");
+					flag = 1;
+					break;
+				}
+				for(var i = 0 ; i < point_num ; i++)
+				{
+					vis[i] = 0;
+				}
+				setTimeout(function(){
+					$("#middle button").attr("class","btn-sm btn-default");
+					$("#open_table").empty();
+					$("#close_table").empty();
+					$("#middle button:eq("+end_point+")").attr("class","btn-sm btn-danger");
+					$("#middle button:eq("+begin_point+")").attr("class","btn-sm btn-primary");
+				},1000*btn_time);
+
+			}
+			if(flag == 0)
+			{
+				alert("false");
+			}
+		}
+	});
+	$("#btn6").click(function(){
+		$("pre").hide();
+		$("#fbest").show();
+		best();
+	});
+	//开始画图   画点
+	$("#btn8").click(function(){
+		$("#middle").bind("click",function(){
+			var x = Math.round(event.pageX - $(window).width()/6);
+			var y = Math.round(event.pageY - $(window).height()/6);
+			$("#middle").append("<button class='btn-sm btn-default' x="+x+" y="+y+" style='position:absolute;left:"+x+"px;top:"+y+"px'>"+point_num+"</button>");
+			point[point_num][0] = x;
+			point[point_num][1] = y;
+			point_num++;
+		});
+	});
+
+	//开始画边
+	$("#btn9").click(function(){
+		$("#middle").unbind();		
+		$("#middle button").unbind();
+		$("#middle button").click(function(){
+			if(tem%2==0)
+			{
+				draw_line_tem = $(this).index();
+				line[line_num][0] = $(this).index() - 1;
+				tem++;
+			}
+			else
+			{
+				pageLoad(point[draw_line_tem-1][0],point[draw_line_tem-1][1],point[$(this).index()-1][0],point[$(this).index()-1][1]);
+				line[line_num][1] = $(this).index() - 1;
+				if(line[line_num][0] > line[line_num][1]){
+					var temp = line[line_num][0];
+					line[line_num][0] = line[line_num][1];
+					line[line_num][1] = temp;
+				}
+				line_num++;
+				tem++;				
+			}
+
+		});
+	});
+
+	//起点终点
+	$("#btn10").click(function(){
+		$("#middle").unbind();
+		$("#middle button").unbind();
+		$("#middle button").click(function(){
+			if(begin_end_tem == 0)
+			{
+				$(this).attr("class","btn-sm btn-primary");
+				begin_point = $(this).index() - 1;
+				begin_end_tem ++;
+			}
+			else if(begin_end_tem == 1)
+			{
+				$(this).attr("class","btn-sm btn-danger");
+				end_point = $(this).index() - 1;
+				begin_end_tem ++;
+			}
+		})
+	});
+
+	//结束画图
+	$("#btn11").click(function(){
+		$("#middle button").unbind();
+		$("#middle").unbind();
+		$("#middle button").click(function(){
+			$("#coordination").empty().append("<h4>x:"+point[$(this).index()-1][0]+"    y:"+point[$(this).index()-1][1]+"</h4>");
+		});
+		for(var i = 0 ; i < point_num ; i++)
+		{
+			vis[i] = 0;
+			edge[i] = new Array();
+			for(var k = 0 ; k < point_num ; k++)
+			{
+				edge[i][k] = 0;
+			}
+
+			for(var j = 0 ; j < line_num ; j++)
+			{
+				if(line[j][0] == i)
+				{
+					edge[i][line[j][1]] = 1;
+					var b = line[j][1];
+					dis_point[i][b] = Math.round(Math.sqrt(Math.pow(point[i][0]-point[b][0],2) + Math.pow(point[i][1]-point[b][1],2)));
+					dis_point[b][i] = dis_point[i][b];
+				}
+				else if(line[j][1] == i)
+				{
+					edge[i][line[j][0]] = 1;
+					var d = line[j][1];
+					dis_point[i][d] = Math.round(Math.sqrt(Math.pow(point[i][0]-point[d][0],2) + Math.pow(point[i][1]-point[d][1],2)));
+					dis_point[d][i] = dis_point[i][d];
+				}
+			}
+		}
+	});
+	$("#btn_renew").click(function(){
+		renew();
+	});
+
+
+</script>
+</html>
